@@ -17,6 +17,8 @@ use nom::{
     IResult,
 };
 
+#[cfg(feature = "rfc-8438")]
+use crate::parser::rfc8438;
 use crate::{
     parser::{
         core::*, rfc2087, rfc2971, rfc3501::body::*, rfc3501::body_structure::*, rfc4314, rfc4315,
@@ -340,6 +342,8 @@ fn status_att(i: &[u8]) -> IResult<&[u8], StatusAttribute> {
             preceded(tag_no_case("UNSEEN "), number),
             StatusAttribute::Unseen,
         ),
+        #[cfg(feature = "rfc-8438")]
+        rfc8438::status_att_val_size,
     ))(i)
 }
 

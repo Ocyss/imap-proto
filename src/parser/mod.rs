@@ -16,6 +16,9 @@ pub mod rfc5256;
 pub mod rfc5464;
 pub mod rfc7162;
 
+#[cfg(feature = "rfc-8438")]
+pub mod rfc8438;
+
 #[cfg(test)]
 mod tests;
 

@@ -127,6 +127,8 @@ pub enum ResponseCode<'a> {
     BadCharset(Option<Vec<Cow<'a, str>>>),
     Capabilities(Vec<Capability<'a>>),
     HighestModSeq(u64), // RFC 4551, section 3.1.1
+    #[cfg(feature = "rfc-8438")]
+    Size(u64), // RFC 8438
     Parse,
     PermanentFlags(Vec<Cow<'a, str>>),
     ReadOnly,
@@ -173,6 +175,8 @@ impl<'a> ResponseCode<'a> {
                 ResponseCode::Capabilities(v.into_iter().map(Capability::into_owned).collect())
             }
             ResponseCode::HighestModSeq(v) => ResponseCode::HighestModSeq(v),
+            #[cfg(feature = "rfc-8438")]
+            ResponseCode::Size(v) => ResponseCode::Size(v),
             ResponseCode::Parse => ResponseCode::Parse,
             ResponseCode::PermanentFlags(v) => {
                 ResponseCode::PermanentFlags(v.into_iter().map(to_owned_cow).collect())
@@ -197,6 +201,8 @@ impl<'a> ResponseCode<'a> {
 #[derive(Debug, Eq, PartialEq, Clone)]
 #[non_exhaustive]
 pub enum StatusAttribute {
+    #[cfg(feature = "rfc-8438")]
+    Size(u64), // RFC 8438
     HighestModSeq(u64), // RFC 4551
     Messages(u32),
     Recent(u32),
