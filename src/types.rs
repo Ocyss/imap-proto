@@ -336,6 +336,7 @@ pub enum Attribute {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum MessageSection {
     Header,
     Mime,
@@ -343,6 +344,7 @@ pub enum MessageSection {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum SectionPath {
     Full(MessageSection),
     Part(Vec<u32>, Option<MessageSection>),
@@ -350,6 +352,7 @@ pub enum SectionPath {
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[non_exhaustive]
 pub enum AttributeValue<'a> {
     BodySection {
@@ -380,6 +383,8 @@ pub enum AttributeValue<'a> {
     /// `THREADID NIL`, which RFC 8474 §5.2 mandates for messages that do
     /// not currently have a thread association.
     ThreadId(Option<Cow<'a, str>>),
+    /// RFC 8970 §3.3 — `PREVIEW`: a short preview of the message body.
+    Preview(Option<Cow<'a, str>>),
     /// An unknown or not-yet-supported FETCH attribute.
     ///
     /// Returned for any `msg-att` token that the parser does not explicitly
@@ -422,6 +427,7 @@ impl<'a> AttributeValue<'a> {
             AttributeValue::GmailThrId(v) => AttributeValue::GmailThrId(v),
             AttributeValue::EmailId(v) => AttributeValue::EmailId(to_owned_cow(v)),
             AttributeValue::ThreadId(v) => AttributeValue::ThreadId(v.map(to_owned_cow)),
+            AttributeValue::Preview(v) => AttributeValue::Preview(v.map(to_owned_cow)),
             AttributeValue::Unknown => AttributeValue::Unknown,
         }
     }
@@ -429,6 +435,7 @@ impl<'a> AttributeValue<'a> {
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum BodyStructure<'a> {
     Basic {
         common: BodyContentCommon<'a>,
@@ -508,6 +515,7 @@ impl<'a> BodyStructure<'a> {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct BodyContentCommon<'a> {
     pub ty: ContentType<'a>,
     pub disposition: Option<ContentDisposition<'a>>,
@@ -529,6 +537,7 @@ impl<'a> BodyContentCommon<'a> {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct BodyContentSinglePart<'a> {
     pub id: Option<Cow<'a, str>>,
     pub md5: Option<Cow<'a, str>>,
@@ -550,6 +559,7 @@ impl<'a> BodyContentSinglePart<'a> {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ContentType<'a> {
     pub ty: Cow<'a, str>,
     pub subtype: Cow<'a, str>,
@@ -564,9 +574,18 @@ impl<'a> ContentType<'a> {
             params: body_param_owned(self.params),
         }
     }
+
+    pub fn mime_type(&self) -> String {
+        format!(
+            "{}/{}",
+            self.ty.to_ascii_lowercase(),
+            self.subtype.to_ascii_lowercase(),
+        )
+    }
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ContentDisposition<'a> {
     pub ty: Cow<'a, str>,
     pub params: BodyParams<'a>,
@@ -582,6 +601,7 @@ impl<'a> ContentDisposition<'a> {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ContentEncoding<'a> {
     SevenBit,
     EightBit,
@@ -605,6 +625,7 @@ impl<'a> ContentEncoding<'a> {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum BodyExtension<'a> {
     Num(u32),
     Str(Option<Cow<'a, str>>),
@@ -637,6 +658,7 @@ fn body_param_owned(v: BodyParams<'_>) -> BodyParams<'static> {
 ///
 /// See https://datatracker.ietf.org/doc/html/rfc2822#section-3.6 for more details.
 #[derive(Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Envelope<'a> {
     pub date: Option<Cow<'a, [u8]>>,
     pub subject: Option<Cow<'a, [u8]>>,
@@ -683,6 +705,7 @@ impl<'a> Envelope<'a> {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Address<'a> {
     pub name: Option<Cow<'a, [u8]>>,
     pub adl: Option<Cow<'a, [u8]>>,

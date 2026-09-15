@@ -599,6 +599,18 @@ fn msg_att_threadid(i: &[u8]) -> IResult<&[u8], AttributeValue<'_>> {
     )(i)
 }
 
+// RFC 8970 §3.3 — PREVIEW
+//   "PREVIEW" SP nstring
+fn msg_att_preview(i: &[u8]) -> IResult<&[u8], AttributeValue<'_>> {
+    map(
+        preceded(
+            tag_no_case("PREVIEW "),
+            alt((map(nil, |_| None), nstring_utf8)),
+        ),
+        AttributeValue::Preview,
+    )(i)
+}
+
 // Catch-all for RFC extension attributes not explicitly handled above.
 //
 // RFC-compliant servers (Apache James, Stalwart, Dovecot) may include
@@ -651,6 +663,7 @@ fn msg_att(i: &[u8]) -> IResult<&[u8], AttributeValue<'_>> {
         gmail::msg_att_gmail_thrid,
         msg_att_emailid,
         msg_att_threadid,
+        msg_att_preview,
         msg_att_unknown,
     ))(i)
 }
